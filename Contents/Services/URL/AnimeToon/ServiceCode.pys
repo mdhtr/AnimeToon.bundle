@@ -1,6 +1,6 @@
 ######################################################################################
 
-BASE_URL = 'http://www.animetoon.tv'
+BASE_URL = 'http://www.animetoon.eu'
 RE_VIDEOFUN = Regex('http://s(.*)(?=".\s)')
 RE_PLAY44 = Regex("http://.*gateway.*(?=')")
 RE_THUMB = Regex('http://videofun.me/frames/(.*)(?=".\s)')
@@ -40,7 +40,7 @@ def MetadataObjectForURL(url):
 		summary = show_summary,
 		genres = show_genres,
 		rating = show_rating,
-		source_title = "AnimeToon.tv"
+		source_title = "AnimeToon.eu"
 		)
 
 ######################################################################################
@@ -99,4 +99,36 @@ def MediaObjectsForURL(url):
 		Log(url)
 		return [MediaObject(parts = [PartObject(key = url)])]
 
-	
+### new URLS added 2015.01:
+
+	elif each.find("videozoo") >= 0:
+		page_data = HTML.ElementFromURL(each)
+		string_data = HTML.StringFromElement(page_data)
+		find_url = RE_PLAY44.search(string_data).group()
+		url = String.Unquote(find_url, usePlus=False)
+		Log(url)
+		return [MediaObject(parts = [PartObject(key = url)])]
+
+	elif each.find("playbb") >= 0:
+		page_data = HTML.ElementFromURL(each)
+		string_data = HTML.StringFromElement(page_data)
+		find_url = RE_PLAY44.search(string_data).group()
+		url = String.Unquote(find_url, usePlus=False)
+		Log(url)
+		return [MediaObject(parts = [PartObject(key = url)])]
+
+	elif each.find("easyvideo") >= 0:
+		page_data = HTML.ElementFromURL(each)
+		string_data = HTML.StringFromElement(page_data)
+		find_url = RE_VIDEO44.search(string_data).group()
+		url = String.Unquote(find_url, usePlus=False)
+		Log(url)
+		return [MediaObject(parts = [PartObject(key = url)])]
+
+	elif each.find("playpanda") >= 0:
+		page_data = HTML.ElementFromURL(each)
+		string_data = HTML.StringFromElement(page_data)
+		find_url = RE_PLAY44.search(string_data).group()
+		url = String.Unquote(find_url, usePlus=False)
+		Log(url)
+		return [MediaObject(parts = [PartObject(key = url)])]
