@@ -1,6 +1,8 @@
 ######################################################################################
-
 BASE_URL = 'http://www.animetoon.eu'
+ICON_COVER = "icon-cover.png"
+
+#TODO find strings and regex strings should be placed in a dictionary to loop through
 RE_VIDEOFUN = Regex('http://s(.*)(?=".\s)')
 RE_PLAY44 = Regex("http://.*gateway.*(?=')")
 RE_THUMB = Regex('http://videofun.me/frames/(.*)(?=".\s)')
@@ -8,25 +10,27 @@ RE_CHEESE = Regex('http://stream.*(?=")')
 RE_VIDZUR = Regex("http://.*videos.*(?=')")
 RE_VIDEO44 = Regex('http://.*dl.*(?=")')
 RE_BYZOO = Regex("http://beta.*(?=')")
-ICON_COVER = "icon-cover.png"
 
 ######################################################################################
 # Loads thumbnail from videofun iframe if available.
 
 def MetadataObjectForURL(url):
 
+    # Episode data from animetoons episode page.
     ep_data = HTML.ElementFromURL(url)
     show_data = HTML.ElementFromURL(ep_data.xpath("//div[@id='slink']/span/span/a/@href")[0])
     ep_title = ep_data.xpath("//div[@id='top_block']/h1/text()")[0].strip()
+
+    # Show/Serie data from animetoons serie page to display for every episode.
     show_thumb = show_data.xpath("//img[@id='series_image']/@src")[0]
     show_genres = show_data.xpath("//span[@class='red_box']/a/text()")
 
-    try:
+    try: #TODO could try instead: float(show_data.xpath("//*[@id='rating_num']/text()")[0])
         show_rating = float(show_data.xpath("//span[@id='rating_num']/text()")[0])
     except:
         show_rating = 0.00
 
-    try:
+    try: #TODO could try instead: show_data.xpath("//*[@id='full_notes']/text()")[0].strip()
         show_summary = show_data.xpath("//div[@class='right_col']/div/div[2]/div/span[2]/text()")[0].strip()
     except:
         try:
@@ -50,9 +54,11 @@ def MetadataObjectForURL(url):
 def MediaObjectsForURL(url):
 
     page_data = HTML.ElementFromURL(url)
-    each = page_data.xpath("//div[@id='streams']//iframe/@src")[0] #returns the first iframe's src only
+    #TODO "each" is a bad name, it seems like it's a loop but it's not.
+    each = page_data.xpath("//div[@id='streams']//iframe/@src")[0] #returns the first iframe's src only.
 
-    page_data = HTML.ElementFromURL(each)
+    # refactored part begins
+    page_data = HTML.ElementFromURL(each) #TODO overwrites page_data, this should be called sthing else?
     string_data = HTML.StringFromElement(page_data)
 
     if each.find("videofun") >= 0:
@@ -84,6 +90,7 @@ def MediaObjectsForURL(url):
     elif each.find("playpanda") >= 0:
         find_url = RE_PLAY44.search(string_data).group()
 
+    #TODO the following should run only if something was found, instead it runs always
     if each.find("cheesestream") >= 0:
         url = RE_CHEESE.search(string_data).group() # special case, the URL is not postprocessed in this case
     else:
