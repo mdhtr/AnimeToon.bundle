@@ -2,15 +2,6 @@
 BASE_URL = 'http://www.animetoon.eu'
 ICON_COVER = "icon-cover.png"
 
-#TODO find strings and regex strings should be placed in a dictionary to loop through
-RE_VIDEOFUN = Regex('http://s(.*)(?=".\s)')
-RE_PLAY44 = Regex("http://.*gateway.*(?=')")
-RE_THUMB = Regex('http://videofun.me/frames/(.*)(?=".\s)')
-RE_CHEESE = Regex('http://stream.*(?=")')
-RE_VIDZUR = Regex("http://.*videos.*(?=')")
-RE_VIDEO44 = Regex('http://.*dl.*(?=")')
-RE_BYZOO = Regex("http://beta.*(?=')")
-
 ######################################################################################
 # Loads thumbnail from videofun iframe if available.
 
@@ -52,49 +43,42 @@ def MetadataObjectForURL(url):
 
 @deferred
 def MediaObjectsForURL(url):
+# This function should create and return a list of media objects and part objects representing
+# the media available at the given URL. Callbacks may be used if obtaining the final media
+# location requires additional computation.
+
+    RE_VIDEOFUN = Regex('http://s(.*)(?=".\s)')
+    RE_PLAY44 = Regex("http://.*gateway.*(?=')")
+    RE_THUMB = Regex('http://videofun.me/frames/(.*)(?=".\s)')
+    RE_CHEESE = Regex('http://stream.*(?=")')
+    RE_VIDZUR = Regex("http://.*videos.*(?=')")
+    RE_VIDEO44 = Regex('http://.*dl.*(?=")')
+    RE_BYZOO = Regex("http://beta.*(?=')")
+
+    sources = {
+        "videofun" : RE_VIDEOFUN,
+        "video44" : RE_VIDEO44,
+        "vidzur" : RE_VIDZUR,
+        "play44" : RE_PLAY44,
+        "byzoo" : RE_BYZOO,
+        "videozoo" : RE_PLAY44,
+        "playbb" : RE_PLAY44,
+        "easyvideo" : RE_VIDEO44,
+        "playpanda" : RE_PLAY44,
+        "cheesestream" : RE_CHEESE
+    }
 
     page_data = HTML.ElementFromURL(url)
     #TODO "each" is a bad name, it seems like it's a loop but it's not.
     each = page_data.xpath("//div[@id='streams']//iframe/@src")[0] #returns the first iframe's src only.
 
-    # refactored part begins
+    #refactored part begins
     page_data = HTML.ElementFromURL(each) #TODO overwrites page_data, this should be called sthing else?
     string_data = HTML.StringFromElement(page_data)
 
-    if each.find("videofun") >= 0:
-        find_url = RE_VIDEOFUN.search(string_data).group()
-
-    elif each.find("video44") >= 0:
-        find_url = RE_VIDEO44.search(string_data).group()
-
-    elif each.find("vidzur") >= 0:
-        find_url = RE_VIDZUR.search(string_data).group()
-
-    elif each.find("play44") >= 0:
-        find_url = RE_PLAY44.search(string_data).group()
-
-    elif each.find("byzoo") >= 0:
-        find_url = RE_BYZOO.search(string_data).group()
-
-    ### new URLS added 2015.01:
-
-    elif each.find("videozoo") >= 0:
-       find_url = RE_PLAY44.search(string_data).group()
-
-    elif each.find("playbb") >= 0:
-        find_url = RE_PLAY44.search(string_data).group()
-
-    elif each.find("easyvideo") >= 0:
-        find_url = RE_VIDEO44.search(string_data).group()
-
-    elif each.find("playpanda") >= 0:
-        find_url = RE_PLAY44.search(string_data).group()
-
-    #TODO the following should run only if something was found, instead it runs always
-    if each.find("cheesestream") >= 0:
-        url = RE_CHEESE.search(string_data).group() # special case, the URL is not postprocessed in this case
-    else:
-        url = String.Unquote(find_url, usePlus=False)
-
-    Log(url)
-    return [MediaObject(parts = [PartObject(key = url)])]
+    for name, regex in sources.items():
+        if each.find(name) >= 0:
+            find_url = regex.search(string_data).group()
+            url = String.Unquote(find_url, usePlus=False)
+            Log(url)
+            return [MediaObject(parts = [PartObject(key = url)])]
