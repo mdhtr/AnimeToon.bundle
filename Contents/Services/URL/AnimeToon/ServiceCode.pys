@@ -2,10 +2,31 @@
 BASE_URL = 'http://www.animetoon.eu'
 ICON_COVER = "icon-cover.png"
 
+RE_VIDEOFUN = Regex('http://s(.*)(?=".\s)')
+RE_PLAY44 = Regex("http://.*gateway.*(?=')")
+RE_THUMB = Regex('http://videofun.me/frames/(.*)(?=".\s)')
+RE_CHEESE = Regex('http://stream.*(?=")')
+RE_VIDZUR = Regex("http://.*videos.*(?=')")
+RE_VIDEO44 = Regex('http://.*dl.*(?=")')
+RE_BYZOO = Regex("http://beta.*(?=')")
+
+sources = {
+    "videofun" : RE_VIDEOFUN,
+    "video44" : RE_VIDEO44,
+    "vidzur" : RE_VIDZUR,
+    "play44" : RE_PLAY44,
+    "byzoo" : RE_BYZOO,
+    "videozoo" : RE_PLAY44,
+    "playbb" : RE_PLAY44,
+    "easyvideo" : RE_VIDEO44,
+    "playpanda" : RE_PLAY44,
+    "cheesestream" : RE_CHEESE
+}
 ######################################################################################
 # Loads thumbnail from videofun iframe if available.
 
 def MetadataObjectForURL(url):
+    url = url.split("??")[0] # first part of the url string is the animetoon episode url
 
     # Episode data from animetoons episode page.
     ep_data = HTML.ElementFromURL(url)
@@ -47,37 +68,13 @@ def MediaObjectsForURL(url):
 # the media available at the given URL. Callbacks may be used if obtaining the final media
 # location requires additional computation.
 
-    RE_VIDEOFUN = Regex('http://s(.*)(?=".\s)')
-    RE_PLAY44 = Regex("http://.*gateway.*(?=')")
-    RE_THUMB = Regex('http://videofun.me/frames/(.*)(?=".\s)')
-    RE_CHEESE = Regex('http://stream.*(?=")')
-    RE_VIDZUR = Regex("http://.*videos.*(?=')")
-    RE_VIDEO44 = Regex('http://.*dl.*(?=")')
-    RE_BYZOO = Regex("http://beta.*(?=')")
+    mirror = url.split("??")[1]
 
-    sources = {
-        "videofun" : RE_VIDEOFUN,
-        "video44" : RE_VIDEO44,
-        "vidzur" : RE_VIDZUR,
-        "play44" : RE_PLAY44,
-        "byzoo" : RE_BYZOO,
-        "videozoo" : RE_PLAY44,
-        "playbb" : RE_PLAY44,
-        "easyvideo" : RE_VIDEO44,
-        "playpanda" : RE_PLAY44,
-        "cheesestream" : RE_CHEESE
-    }
-
-    page_data = HTML.ElementFromURL(url)
-    #TODO "each" is a bad name, it seems like it's a loop but it's not.
-    each = page_data.xpath("//div[@id='streams']//iframe/@src")[0] #returns the first iframe's src only.
-
-    #refactored part begins
-    page_data = HTML.ElementFromURL(each) #TODO overwrites page_data, this should be called sthing else?
-    string_data = HTML.StringFromElement(page_data)
+    mirror_data = HTML.ElementFromURL(mirror)
+    string_data = HTML.StringFromElement(mirror_data)
 
     for name, regex in sources.items():
-        if each.find(name) >= 0:
+        if mirror.find(name) >= 0:
             find_url = regex.search(string_data).group()
             url = String.Unquote(find_url, usePlus=False)
             Log(url)
