@@ -9,6 +9,7 @@ RE_CHEESE = Regex('http://stream.*(?=")')
 RE_VIDZUR = Regex("http://.*videos.*(?=')")
 RE_VIDEO44 = Regex('http://.*dl.*(?=")')
 RE_BYZOO = Regex("http://beta.*(?=')")
+RE_GOOGLEVIDEO = Regex("http(s?)://.*googlevideo.*(?=')")
 
 sources = {
     "videofun" : RE_VIDEOFUN,
@@ -18,8 +19,8 @@ sources = {
     "byzoo" : RE_BYZOO,
     "videozoo" : RE_PLAY44,
     "playbb" : RE_PLAY44,
-    "easyvideo" : RE_VIDEO44,
-    "playpanda" : RE_PLAY44,
+    "easyvideo" : RE_GOOGLEVIDEO,
+    "playpanda" : RE_GOOGLEVIDEO,
     "cheesestream" : RE_CHEESE
 }
 ######################################################################################
