@@ -1,134 +1,70 @@
 ######################################################################################
-
-BASE_URL = 'http://www.animetoon.eu'
-RE_VIDEOFUN = Regex('http://s(.*)(?=".\s)')
-RE_PLAY44 = Regex("http://.*gateway.*(?=')")
-RE_THUMB = Regex('http://videofun.me/frames/(.*)(?=".\s)')
-RE_CHEESE = Regex('http://stream.*(?=")')
-RE_VIDZUR = Regex("http://.*videos.*(?=')")
-RE_VIDEO44 = Regex('http://.*dl.*(?=")')
-RE_BYZOO = Regex("http://beta.*(?=')")
-ICON_COVER = "icon-cover.png"
-
+search_strings = [
+    Regex('http:\/\/s(.*)(?=".\s)'),
+    Regex("http:\/\/.*gateway.*(?=')"),
+    Regex('http:\/\/videofun.me\/frames\/(.*)(?=".\s)'),
+    Regex('http:\/\/stream.*(?=")'),
+    Regex("http:\/\/.*videos.*(?=')"),
+    Regex('http:\/\/.*dl.*(?=")'),
+    Regex("http:\/\/beta.*(?=')"),
+    Regex("http(s?):\/\/.*googlevideo.*(?=')")
+]
 ######################################################################################
 # Loads thumbnail from videofun iframe if available.
 
 def MetadataObjectForURL(url):
-	
-	ep_data = HTML.ElementFromURL(url)
-	show_data = HTML.ElementFromURL(ep_data.xpath("//div[@id='slink']/span/span/a/@href")[0])
-	ep_title = ep_data.xpath("//div[@id='top_block']/h1/text()")[0].strip()
-	show_thumb = show_data.xpath("//img[@id='series_image']/@src")[0]
-	show_genres = show_data.xpath("//span[@class='red_box']/a/text()")
-	
-	try:
-		show_rating = float(show_data.xpath("//span[@id='rating_num']/text()")[0])
-	except:
-		show_rating = 0.00
-	
-	try:
-		show_summary = show_data.xpath("//div[@class='right_col']/div/div[2]/div/span[2]/text()")[0].strip()
-	except:
-		try:
-			show_summary = show_data.xpath("//div[@id='series_details']/div[2]/div/text()")[0].strip()
-		except:
-			show_summary = show_data.xpath("//div[@id='series_details']/div/div/text()")[0].strip()
-	
-	return MovieObject(
-		title = ep_title,
-		thumb = Resource.ContentsOfURLWithFallback(url = show_thumb, fallback='icon-cover.png'),
-		summary = show_summary,
-		genres = show_genres,
-		rating = show_rating,
-		source_title = "AnimeToon.eu"
-		)
+    url = url.split("??")[0] # first part of the url string is the animetoon episode url
+
+    # Episode data from animetoons episode page.
+    ep_data = HTML.ElementFromURL(url)
+    show_data = HTML.ElementFromURL(ep_data.xpath("//div[@id='slink']/span/span/a/@href")[0])
+    ep_title = ep_data.xpath("//div[@id='top_block']/h1/text()")[0].strip()
+
+    # Show/Serie data from animetoons serie page to display for every episode.
+    show_thumb = show_data.xpath("//img[@id='series_image']/@src")[0]
+    show_genres = show_data.xpath("//span[@class='red_box']/a/text()")
+
+    try: #TODO could try instead: float(show_data.xpath("//*[@id='rating_num']/text()")[0])
+        show_rating = float(show_data.xpath("//span[@id='rating_num']/text()")[0])
+    except:
+        show_rating = 0.00
+
+    try: #TODO could try instead: show_data.xpath("//*[@id='full_notes']/text()")[0].strip()
+        show_summary = show_data.xpath("//div[@class='right_col']/div/div[2]/div/span[2]/text()")[0].strip()
+    except:
+        try:
+            show_summary = show_data.xpath("//div[@id='series_details']/div[2]/div/text()")[0].strip()
+        except:
+            show_summary = show_data.xpath("//div[@id='series_details']/div/div/text()")[0].strip()
+
+    return MovieObject(
+        title = ep_title,
+        thumb = Resource.ContentsOfURLWithFallback(url = show_thumb, fallback='icon-cover.png'),
+        summary = show_summary,
+        genres = show_genres,
+        rating = show_rating,
+        source_title = "AnimeToon"
+        )
 
 ######################################################################################
 # All videos vary in codec and must be transcoded
 
 @deferred
 def MediaObjectsForURL(url):
-	
-	page_data = HTML.ElementFromURL(url)
-	each = page_data.xpath("//div[@id='streams']//iframe/@src")[0]
-	
-	if each.find("videofun") >= 0:
-		page_data = HTMLElementFromURL(each)
-		string_data = HTML.StringFromElement(page_data)
-		find_url = RE_VIDEOFUN.search(string_data).group()
-		url = String.Unquote(find_url, usePlus=False)
-		Log(url)
-		return [MediaObject(parts = [PartObject(key = url)])]
+# This function should create and return a list of media objects and part objects representing
+# the media available at the given URL. Callbacks may be used if obtaining the final media
+# location requires additional computation.
 
-	elif each.find("video44") >= 0:
-		page_data = HTML.ElementFromURL(each)
-		string_data = HTML.StringFromElement(page_data)
-		find_url = RE_VIDEO44.search(string_data).group()
-		url = String.Unquote(find_url, usePlus=False)
-		Log(url)
-		return [MediaObject(parts = [PartObject(key = url)])]
+    mirror = url.split("??")[1]
 
-	elif each.find("cheesestream") >= 0:
-		page_data = HTML.ElementFromURL(each)
-		string_data = HTML.StringFromElement(page_data)
-		url = RE_CHEESE.search(string_data).group()
-		Log(url)
-		return [MediaObject(parts = [PartObject(key = url)])]
-	
-	elif each.find("vidzur") >= 0:
-		page_data = HTML.ElementFromURL(each)
-		string_data = HTML.StringFromElement(page_data)
-		find_url = RE_VIDZUR.search(string_data).group()
-		url = String.Unquote(find_url, usePlus=False)
-		Log(url)
-		return [MediaObject(parts = [PartObject(key = url)])]
-		
-	elif each.find("play44") >= 0:
-		page_data = HTML.ElementFromURL(each)
-		string_data = HTML.StringFromElement(page_data)
-		find_url = RE_PLAY44.search(string_data).group()
-		url = String.Unquote(find_url, usePlus=False)
-		Log(url)
-		return [MediaObject(parts = [PartObject(key = url)])] 
-		
-	elif each.find("byzoo") >= 0:
-		page_data = HTML.ElementFromURL(each)
-		string_data = HTML.StringFromElement(page_data)
-		find_url = RE_BYZOO.search(string_data).group()
-		url = String.Unquote(find_url, usePlus=False)
-		Log(url)
-		return [MediaObject(parts = [PartObject(key = url)])]
+    mirror_data = HTML.ElementFromURL(mirror)
+    string_data = HTML.StringFromElement(mirror_data)
 
-### new URLS added 2015.01:
-
-	elif each.find("videozoo") >= 0:
-		page_data = HTML.ElementFromURL(each)
-		string_data = HTML.StringFromElement(page_data)
-		find_url = RE_PLAY44.search(string_data).group()
-		url = String.Unquote(find_url, usePlus=False)
-		Log(url)
-		return [MediaObject(parts = [PartObject(key = url)])]
-
-	elif each.find("playbb") >= 0:
-		page_data = HTML.ElementFromURL(each)
-		string_data = HTML.StringFromElement(page_data)
-		find_url = RE_PLAY44.search(string_data).group()
-		url = String.Unquote(find_url, usePlus=False)
-		Log(url)
-		return [MediaObject(parts = [PartObject(key = url)])]
-
-	elif each.find("easyvideo") >= 0:
-		page_data = HTML.ElementFromURL(each)
-		string_data = HTML.StringFromElement(page_data)
-		find_url = RE_VIDEO44.search(string_data).group()
-		url = String.Unquote(find_url, usePlus=False)
-		Log(url)
-		return [MediaObject(parts = [PartObject(key = url)])]
-
-	elif each.find("playpanda") >= 0:
-		page_data = HTML.ElementFromURL(each)
-		string_data = HTML.StringFromElement(page_data)
-		find_url = RE_PLAY44.search(string_data).group()
-		url = String.Unquote(find_url, usePlus=False)
-		Log(url)
-		return [MediaObject(parts = [PartObject(key = url)])]
+    found = None
+    for regex in search_strings:
+        found = regex.search(string_data)
+        if found != None:
+            found_url = found.group()
+            url = String.Unquote(found_url, usePlus=False)
+            Log.Debug(url)
+            return [MediaObject(parts = [PartObject(key = url)])]
