@@ -289,16 +289,18 @@ def GetMirrors(ep_url):
     mirrors = page_data.xpath("//div[@id='streams']//iframe/@src")
 
     for mirror_url in mirrors:
-        video_host = mirror_url.split("/")[2]
-        video_title = ep_title + " via " + video_host
-
-        oc.add(PopupDirectoryObject(
-            key = Callback(GetParts, ep_url = ep_url, host_url = mirror_url),
-            title = video_title,
-            summary = "Watch " + video_title + " from AnimeToon",
-            thumb = R(ICON_COVER)
-        )
-        )
+        if mirror_url.find('videozoo')>=0:
+            continue
+        else:
+            video_host = mirror_url.split("/")[2]
+            video_title = ep_title + " via " + video_host
+            oc.add(PopupDirectoryObject(
+                key=Callback(GetParts, ep_url=ep_url, host_url=mirror_url),
+                title=video_title,
+                summary="Watch " + video_title + " from AnimeToon",
+                thumb=R(ICON_COVER)
+            )
+            )
 
     return oc
 

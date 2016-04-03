@@ -1,28 +1,14 @@
 ######################################################################################
-BASE_URL = 'http://www.animetoon.eu'
-ICON_COVER = "icon-cover.png"
-
-RE_VIDEOFUN = Regex('http://s(.*)(?=".\s)')
-RE_PLAY44 = Regex("http://.*gateway.*(?=')")
-RE_THUMB = Regex('http://videofun.me/frames/(.*)(?=".\s)')
-RE_CHEESE = Regex('http://stream.*(?=")')
-RE_VIDZUR = Regex("http://.*videos.*(?=')")
-RE_VIDEO44 = Regex('http://.*dl.*(?=")')
-RE_BYZOO = Regex("http://beta.*(?=')")
-RE_GOOGLEVIDEO = Regex("http(s?)://.*googlevideo.*(?=')")
-
-sources = {
-    "videofun" : RE_VIDEOFUN,
-    "video44" : RE_VIDEO44,
-    "vidzur" : RE_VIDZUR,
-    "play44" : RE_PLAY44,
-    "byzoo" : RE_BYZOO,
-    "videozoo" : RE_PLAY44,
-    "playbb" : RE_PLAY44,
-    "easyvideo" : RE_GOOGLEVIDEO,
-    "playpanda" : RE_GOOGLEVIDEO,
-    "cheesestream" : RE_CHEESE
-}
+search_strings = [
+    Regex('http:\/\/s(.*)(?=".\s)'),
+    Regex("http:\/\/.*gateway.*(?=')"),
+    Regex('http:\/\/videofun.me\/frames\/(.*)(?=".\s)'),
+    Regex('http:\/\/stream.*(?=")'),
+    Regex("http:\/\/.*videos.*(?=')"),
+    Regex('http:\/\/.*dl.*(?=")'),
+    Regex("http:\/\/beta.*(?=')"),
+    Regex("http(s?):\/\/.*googlevideo.*(?=')")
+]
 ######################################################################################
 # Loads thumbnail from videofun iframe if available.
 
@@ -57,7 +43,7 @@ def MetadataObjectForURL(url):
         summary = show_summary,
         genres = show_genres,
         rating = show_rating,
-        source_title = "AnimeToon.eu"
+        source_title = "AnimeToon"
         )
 
 ######################################################################################
@@ -74,9 +60,11 @@ def MediaObjectsForURL(url):
     mirror_data = HTML.ElementFromURL(mirror)
     string_data = HTML.StringFromElement(mirror_data)
 
-    for name, regex in sources.items():
-        if mirror.find(name) >= 0:
-            find_url = regex.search(string_data).group()
-            url = String.Unquote(find_url, usePlus=False)
-            Log(url)
+    found = None
+    for regex in search_strings:
+        found = regex.search(string_data)
+        if found != None:
+            found_url = found.group()
+            url = String.Unquote(found_url, usePlus=False)
+            Log.Debug(url)
             return [MediaObject(parts = [PartObject(key = url)])]
