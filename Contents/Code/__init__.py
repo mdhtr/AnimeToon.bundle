@@ -17,7 +17,7 @@ ICON_MOVIES = "icon-movies.png"
 ICON_AZ = "icon-az.png"
 ICON_GENRE = "icon-genre.png"
 ICON_QUEUE = "icon-queue.png"
-BASE_URL = "http://www.animetoon.eu"
+BASE_URL = "http://www.animetoon.org"
 
 ######################################################################################
 # Set global variables
@@ -273,7 +273,7 @@ def ListEpisodes(page_url):	# generate episode listing page
         oc.add(DirectoryObject(
             key = Callback(GetMirrors, ep_url = ep_url),
             title = ep_title,
-            summary = "Watch " + ep_title + " from AnimeToon.eu",
+            summary = "Watch " + ep_title + " from AnimeToon",
             thumb = R(ICON_COVER)
         )
         )
@@ -295,7 +295,7 @@ def GetMirrors(ep_url):
         oc.add(PopupDirectoryObject(
             key = Callback(GetParts, ep_url = ep_url, host_url = mirror_url),
             title = video_title,
-            summary = "Watch " + video_title + " from AnimeToon.eu",
+            summary = "Watch " + video_title + " from AnimeToon",
             thumb = R(ICON_COVER)
         )
         )
@@ -317,7 +317,7 @@ def GetParts(ep_url, host_url):
         oc.add(VideoClipObject(
             url = each.xpath("./@href")[0],
             title = ep_title + " " + each.xpath("./text()")[0],
-            summary = "Watch " + ep_title + " from AnimeToon.eu"
+            summary = "Watch " + ep_title + " from AnimeToon"
         )
         )
 
@@ -326,7 +326,7 @@ def GetParts(ep_url, host_url):
         oc.add(VideoClipObject(
             url = ep_url + "??" + host_url, # passes the combined url for parsing
             title = ep_title,
-            summary = "Watch " + ep_title + " from AnimeToon.eu"
+            summary = "Watch " + ep_title + " from AnimeToon"
         )
         )
     return oc
